@@ -1,16 +1,7 @@
-# WorkBuddy 运行说明
+# WorkBuddy 运行约定
 
-## 必需能力
-
-- WorkBuddy 内置 `WebFetch`：默认抓取器，也是微信公众号页面的首选。
-- 本地文件读写和 Python 执行权限：用于生成 Raw Markdown。
-- 乐享 MCP：用于知识库归档。
-
-## 可选能力
-
-- `web-scraper` Skill：仅在 WebFetch 无法取得完整正文时回退使用。
-- 浏览器型 Skill：用于必须执行 JavaScript 或需要交互的页面。
-
-## 权限原则
-
-只授权 WebMark 所需的本地目录、Python 命令和目标网络服务。不要要求对整台电脑永久开启无限制权限。
+- Skill 包根目录必须包含 `SKILL.md`。
+- `SKILL.md` 的 YAML Front Matter 至少包含 `name` 和 `description`。
+- 其他 JSON、脚本、依赖和参考文档可以放在同一技能目录内。
+- Skill 运行时先解析技能目录，再读取根目录 `config.json`。
+- 所有工具名称、运行命令和回传偏好以解析后的 settings 为准。
