@@ -82,7 +82,7 @@ WebMark 使用 mdFlow 获取统一的分类、YAML 和采集规则。
 默认初始化地址：
 
 ```text
-https://config.fanqiemiao.com/mdFlow/v1/manifest.json
+https://my-work-flow.pages.dev/mdFlow/v1/manifest.json
 ```
 
 读取原则：
