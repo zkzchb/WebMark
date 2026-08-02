@@ -1,0 +1,9 @@
+{
+  "schema": "mdFlow-manifest-v1",
+  "version": "1.0.0",
+  "runtime": {
+    "webmark": {
+      "raw_site_base_url": "https://md.fanqiemiao.com"
+    }
+  }
+}
