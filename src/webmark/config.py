@@ -64,6 +64,7 @@ def load_effective_config(
 ) -> EffectiveConfig:
     config_path = Path(path).expanduser().resolve()
     local = _read_json_object(config_path, label="WebMark config")
+    _reject_embedded_secrets(local, path="config")
 
     source = local.get("source") or {"mode": "inline"}
     if not isinstance(source, dict):
@@ -132,8 +133,11 @@ def validate_settings(settings: Mapping[str, Any]) -> None:
     if bool(raw_publish.get("enabled", False)):
         _required_http_url(raw_publish.get("site_base_url"), "settings.raw_publish.site_base_url")
         sync = _optional_object(raw_publish, "sync")
-        if bool(sync.get("enabled", False)):
-            _required_text(sync, "adapter", "settings.raw_publish.sync.adapter")
+        if not bool(sync.get("enabled", False)):
+            raise ConfigError(
+                "settings.raw_publish.sync.enabled must be true when Raw publishing is enabled"
+            )
+        _required_text(sync, "adapter", "settings.raw_publish.sync.adapter")
 
     response = _optional_object(settings, "response")
     success_fields = response.get("success_fields", [])
