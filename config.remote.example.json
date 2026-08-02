@@ -1,0 +1,16 @@
+{
+  "schema": "webmark-bootstrap-v1",
+  "bootstrap": {
+    "python_command": "python",
+    "pip_command": "python -m pip"
+  },
+  "source": {
+    "mode": "remote",
+    "url": "https://config.example.com/mdflow/v1/manifest.json",
+    "cache_path": "~/.webmark/config-cache.json",
+    "selector": "runtime.webmark",
+    "request_timeout_seconds": 30
+  },
+  "settings": {},
+  "overrides": {}
+}
