@@ -1,0 +1,83 @@
+{
+  "schema": "mdFlow-manifest-v1",
+  "version": "1.0.0",
+  "runtime": {
+    "webmark": {
+      "trigger": {
+        "auto_on_bare_url": true,
+        "auto_on_save_intent": true,
+        "multiple_urls": "separate"
+      },
+      "runtime": {
+        "python_command": "python"
+      },
+      "fetch": {
+        "primary_tool": "WebFetch",
+        "fallback_skills": [
+          "OPTIONAL_FALLBACK_SKILL"
+        ],
+        "allow_script_fallback": false,
+        "script_path": "scripts/fetch_page.py",
+        "domain_rules": [
+          {
+            "host": "example.com",
+            "primary_tool": "WebFetch"
+          }
+        ],
+        "prompt": "YOUR_FETCH_PROMPT"
+      },
+      "classification": {
+        "article_min_paragraphs": 3,
+        "article_min_characters": 500,
+        "fallback_collection": "inbox"
+      },
+      "storage": {
+        "raw_root": "YOUR_RAW_DIRECTORY",
+        "file_naming_pattern": "{saved_date}-{title}-{id}.md",
+        "filename_max_title_length": 80,
+        "filename_safe_replacement": "-",
+        "id_length": 10,
+        "encoding": "utf-8"
+      },
+      "front_matter": {
+        "cleanup": 0
+      },
+      "lexiang": {
+        "enabled": true,
+        "mcp_server": "YOUR_MCP_SERVER_NAME",
+        "import_tool": "YOUR_IMPORT_TOOL_NAME",
+        "team_id": "YOUR_TEAM_ID",
+        "space_id": "YOUR_SPACE_ID",
+        "root_entry_id": "YOUR_ROOT_ENTRY_ID",
+        "public_page_base_url": "https://knowledge.example.com/pages",
+        "credential_ref": "YOUR_LOCAL_CREDENTIAL_REFERENCE"
+      },
+      "raw_publish": {
+        "enabled": true,
+        "site_base_url": "https://raw.example.com",
+        "sync": {
+          "enabled": true,
+          "adapter": "YOUR_SYNC_ADAPTER",
+          "profile": "YOUR_LOCAL_SYNC_PROFILE",
+          "target_root": "YOUR_REMOTE_CONTENT_ROOT",
+          "verify": true,
+          "credential_ref": "YOUR_LOCAL_CREDENTIAL_REFERENCE"
+        }
+      },
+      "response": {
+        "success_fields": [
+          "lexiang_url",
+          "raw_site_url"
+        ],
+        "include_summary": false,
+        "include_local_path": false,
+        "batch_format": "table",
+        "labels": {
+          "lexiang_url": "Knowledge",
+          "raw_site_url": "Raw",
+          "local_path": "Local"
+        }
+      }
+    }
+  }
+}
