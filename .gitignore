@@ -1,6 +1,5 @@
-config/local.json
+config.private.json
 .webmark/
-mdflow/
 .venv/
 __pycache__/
 .pytest_cache/
