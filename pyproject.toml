@@ -5,11 +5,9 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "webmark"
 version = "0.1.0"
-description = "URL to Raw Markdown collection skill for WorkBuddy"
+description = "WorkBuddy-first URL to Raw Markdown collection skill"
 requires-python = ">=3.11"
 dependencies = [
-  "beautifulsoup4>=4.12,<5",
-  "markdownify>=0.14,<1",
   "PyYAML>=6.0,<7",
   "requests>=2.32,<3",
 ]
