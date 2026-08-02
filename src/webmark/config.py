@@ -25,7 +25,10 @@ class RuntimeConfig:
     @classmethod
     def from_file(cls, path: str | Path) -> "RuntimeConfig":
         config_path = Path(path).expanduser().resolve()
-        data = json.loads(config_path.read_text(encoding="utf-8"))
+        try:
+            data = json.loads(config_path.read_text(encoding="utf-8"))
+        except (OSError, ValueError) as exc:
+            raise ConfigError(f"Invalid local config at {config_path}: {exc}") from exc
         base = config_path.parent
 
         def resolve(value: str) -> Path:
@@ -41,12 +44,13 @@ class RuntimeConfig:
         )
 
 
-def load_manifest(config: RuntimeConfig, *, initialize: bool = False, upgrade_url: str | None = None) -> dict[str, Any]:
-    """Load mdFlow locally; access the network only when policy permits.
-
-    Network access occurs only for initialization, a missing local cache, or an
-    explicit upgrade URL. Ordinary runs read the local cache exclusively.
-    """
+def load_manifest(
+    config: RuntimeConfig,
+    *,
+    initialize: bool = False,
+    upgrade_url: str | None = None,
+) -> dict[str, Any]:
+    """Load mdFlow locally and fetch only when the stated policy permits."""
     cache = config.manifest_cache
     should_fetch = initialize or upgrade_url is not None or not cache.exists()
 
@@ -68,6 +72,19 @@ def load_manifest(config: RuntimeConfig, *, initialize: bool = False, upgrade_ur
         return manifest
 
     return _read_manifest(cache)
+
+
+def resolve_raw_site_base_url(config: RuntimeConfig, manifest: dict[str, Any]) -> str:
+    """Resolve Raw endpoint from local override or mdFlow distribution."""
+    value = config.raw_site_base_url
+    if not value:
+        value = manifest.get("runtime", {}).get("webmark", {}).get("raw_site_base_url")
+    if not isinstance(value, str) or not value.startswith(("http://", "https://")):
+        raise ConfigError(
+            "Raw site base URL is missing. Set local raw_site_base_url or "
+            "mdFlow runtime.webmark.raw_site_base_url."
+        )
+    return value.rstrip("/")
 
 
 def _read_manifest(path: Path) -> dict[str, Any]:
