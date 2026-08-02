@@ -22,6 +22,10 @@ def make_config(tmp_path: Path, *, publish: bool):
         "raw_publish": {
             "enabled": publish,
             "site_base_url": "https://raw.example.com" if publish else None,
+            "sync": {
+                "enabled": publish,
+                "adapter": "test-adapter" if publish else None,
+            },
         },
         "response": {"success_fields": []},
     }
