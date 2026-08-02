@@ -67,20 +67,23 @@ WebMark/
 
 适合公开用户。保持 `source.mode` 为 `inline`，直接修改 `config.json` 中的 `settings`。仓库提供一份不含个人数据的完整模板。
 
+仓库默认模板只启用本地 Raw 落盘并回传本地路径，因此即使没有知识库或服务器也能完成最小闭环。用户填好相应 JSON 后再启用其他集成。
+
 本地 `overrides` 会深度覆盖远程设置，适合临时更换目录或关闭某个集成。
 
 ## 配置范围
 
 完整 JSON 可配置：
 
-- `trigger`：自动触发和多 URL 行为；
-- `runtime`：Agent 运行参数；
+- `bootstrap`：本机 Python 与依赖安装命令；
+- `trigger`：自动触发、保存意图和多 URL 行为；
 - `fetch`：主抓取工具、域名规则、回退 Skill、Prompt 和脚本回退；
 - `classification`：文章判定阈值和兜底分类；
 - `storage`：Raw 根目录、文件名、编码和 ID 长度；
 - `front_matter`：Raw YAML 初始状态；
 - `lexiang`：是否启用、MCP 服务和工具名称、目标 ID、公开链接基地址；
 - `raw_publish`：站点基地址、同步 adapter、profile、目标目录和验证；
+- `error_handling`：重试、部分失败和错误详情策略；
 - `response`：成功回传字段、标签、摘要、本地路径和批量格式。
 
 远程完整模板见 `mdflow.webmark.example.json`，远程启动模板见 `config.remote.example.json`。
@@ -111,26 +114,26 @@ WebMark/
 查看 Agent 应使用的最终配置：
 
 ```text
-webmark --config config.json config
+{python_command} "<skill_dir>/scripts/webmark.py" --config "<skill_dir>/config.json" config
 ```
 
 初始化或显式刷新远程缓存：
 
 ```text
-webmark --config config.json init
-webmark --config config.json init --upgrade-url https://config.example.com/new.json
+{python_command} "<skill_dir>/scripts/webmark.py" --config "<skill_dir>/config.json" init
+{python_command} "<skill_dir>/scripts/webmark.py" --config "<skill_dir>/config.json" init --upgrade-url https://config.example.com/new.json
 ```
 
 检查配置和 Raw 目录：
 
 ```text
-webmark --config config.json preflight
+{python_command} "<skill_dir>/scripts/webmark.py" --config "<skill_dir>/config.json" preflight
 ```
 
 归档 WorkBuddy 已抓取的结构化内容：
 
 ```text
-webmark --config config.json ingest --input payload.json
+{python_command} "<skill_dir>/scripts/webmark.py" --config "<skill_dir>/config.json" ingest --input "<payload.json>"
 ```
 
 ## 分支与发布
