@@ -1,0 +1,8 @@
+config/local.json
+.webmark/
+mdflow/
+.venv/
+__pycache__/
+.pytest_cache/
+*.py[cod]
+*.payload.json
