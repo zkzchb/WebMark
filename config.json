@@ -15,10 +15,12 @@
     "trigger": {
       "auto_on_bare_url": true,
       "auto_on_save_intent": true,
+      "save_intents": [
+        "save",
+        "collect",
+        "archive"
+      ],
       "multiple_urls": "separate"
-    },
-    "runtime": {
-      "python_command": "python"
     },
     "fetch": {
       "primary_tool": "WebFetch",
@@ -48,7 +50,9 @@
       "enabled": false,
       "mcp_server": null,
       "import_tool": null,
+      "team_name": null,
       "team_id": null,
+      "space_name": null,
       "space_id": null,
       "root_entry_id": null,
       "public_page_base_url": null,
@@ -66,13 +70,17 @@
         "credential_ref": null
       }
     },
+    "error_handling": {
+      "local_write_retries": 1,
+      "continue_on_integration_failure": true,
+      "expose_error_detail": false
+    },
     "response": {
       "success_fields": [
-        "lexiang_url",
-        "raw_site_url"
+        "local_path"
       ],
       "include_summary": false,
-      "include_local_path": false,
+      "include_local_path": true,
       "batch_format": "table",
       "labels": {
         "lexiang_url": "Knowledge",
