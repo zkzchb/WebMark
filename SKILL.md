@@ -1,8 +1,6 @@
 ---
 name: webmark
 description: "当 Master 发送 http/https URL 时，优先使用 WorkBuddy 内置 WebFetch 抓取（尤其是微信公众号），完成基础清洗、分类、Raw Markdown 落盘、乐享归档与 FolderMark-Raw 同步，最终只返回乐享 URL 和 Raw URL。"
-homepage: https://github.com/zkzchb/WebMark
-user-invocable: true
 ---
 
 # WebMark
@@ -19,9 +17,19 @@ WebMark 是 WorkBuddy 优先的网络资料采集 Skill。确定性归档脚本�
 
 1. 确认 `WebFetch` 可用。
 2. 确认乐享 MCP 已连接，并能发现 `knowledge_import_content`；若只暴露元工具，先用 `search_tools` 和 `get_tool_schema` 查找并调用。
-3. 确认 `{baseDir}/config/local.json` 存在；缺失时复制 `config/example.local.json`，再补充本地私密配置。
+3. 确认 `{baseDir}/config/local.json` 存在；缺失时复制 `config/example.local.json`。
 4. 运行 `python {baseDir}/scripts/webmark.py --config {baseDir}/config/local.json preflight`。
 5. 只有首次初始化、本地 mdFlow 缺失或 Master 明确升级时才运行 `init`。日常运行不得主动联网检查 mdFlow 更新。
+
+远程 mdFlow JSON 或本地模板必须提供：
+
+- FolderMark-Raw 基地址；
+- 乐享 `team_id`；
+- 乐享 `space_id`；
+- 乐享 `root_entry_id`；
+- 乐享公开页面基地址。
+
+这些目标 ID 不属于访问凭据，可以通过 JSON 下发。乐享 token、服务器密码和同步密钥不得写入远程 JSON、Skill 或 Markdown。
 
 ## 流程
 
@@ -29,7 +37,7 @@ WebMark 是 WorkBuddy 优先的网络资料采集 Skill。确定性归档脚本�
 
 优先调用 WorkBuddy 内置 `WebFetch`。对 `mp.weixin.qq.com` 页面，禁止先用 Python、requests、curl 或 wget 抓取。
 
-如果 `WebFetch` 无法获得完整正文，再调用已安装的 `web-scraper` Skill 或 WorkBuddy 可用的浏览器抓取能力。只有 WorkBuddy 原生抓取均失败时，才允许脚本级 HTTP 抓取兜底。
+如果 `WebFetch` 无法获得完整正文，再调用已安装的 `web-scraper` Skill或 WorkBuddy 可用的浏览器抓取能力。只有 WorkBuddy 原生抓取均失败时，才允许脚本级 HTTP 抓取兜底。
 
 ### 2. 分流
 
@@ -67,31 +75,42 @@ python {baseDir}/scripts/webmark.py --config {baseDir}/config/local.json ingest 
 }
 ```
 
-可选字段包括 `author`、`published`、`summary`、`tags`、`source_channel`。脚本返回 `local_path`、`document_id` 和 `raw_site_url`。`local_path` 仅供内部后续步骤使用，不在普通回复中展示。
+可选字段包括 `author`、`published`、`summary`、`tags`、`source_channel`。
+
+脚本返回：
+
+- `local_path`；
+- `document_id`；
+- `raw_site_url`；
+- 已解析的乐享目标 ID。
+
+`local_path` 仅供内部后续步骤使用，不在普通回复中展示。
 
 ### 5. 乐享归档
 
-优先调用乐享 MCP 的 `knowledge_import_content`，导入同一份 Markdown 到 mdFlow 或本地配置指定的团队、知识库和父节点。不要把乐享凭据写入仓库、Markdown 或日志。
+读取脚本返回的 `lexiang.team_id`、`lexiang.space_id` 和 `lexiang.root_entry_id`，调用乐享 MCP 的 `knowledge_import_content`，将同一份 Markdown 导入对应位置。
 
-MCP 工具参数以运行时 schema 为准，不凭记忆猜测。归档成功后取得 `entry_id`，对外链接统一构造为：
+MCP 工具参数以运行时 schema 为准，不凭记忆猜测。归档成功后取得 `entry_id`，对外链接使用脚本返回的 `lexiang.public_page_base_url` 构造：
 
 ```text
-https://lexiangla.com/pages/{entry_id}
+{public_page_base_url}/{entry_id}
 ```
+
+不要把乐享 token 写入仓库、远程配置、Markdown 或日志。
 
 ### 6. FolderMark-Raw 同步
 
 按本地同步配置把刚生成的 Raw Markdown 单向同步到服务器内容目录。只有确认同步成功、Raw 页面可访问或同步程序明确返回成功后，才能将 `raw_site_url` 视为成功结果。
 
-Raw 站点基地址不得硬编码在 Skill 或 Python 逻辑中。默认由 mdFlow 的 `runtime.webmark.raw_site_base_url` 下发；当前预期值为 `https://md.fanqiemiao.com`。本地配置可以显式覆盖。
+Raw 站点基地址不得硬编码在 Skill 或 Python 逻辑中。默认由 mdFlow 的 `runtime.webmark.raw_site_base_url` 下发；本地配置可以显式覆盖。
 
 ### 7. 回复
 
 全部成功时只返回两行：
 
 ```text
-乐享：https://lexiangla.com/pages/{entry_id}
-Raw：https://md.fanqiemiao.com/{collection}/{document_id}
+乐享：{public_page_base_url}/{entry_id}
+Raw：{raw_site_url}
 ```
 
 不回传摘要，不回传本地路径，不解释执行过程。
