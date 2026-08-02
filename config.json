@@ -1,0 +1,85 @@
+{
+  "schema": "webmark-bootstrap-v1",
+  "bootstrap": {
+    "python_command": "python",
+    "pip_command": "python -m pip"
+  },
+  "source": {
+    "mode": "inline",
+    "url": null,
+    "cache_path": "~/.webmark/config-cache.json",
+    "selector": "runtime.webmark",
+    "request_timeout_seconds": 30
+  },
+  "settings": {
+    "trigger": {
+      "auto_on_bare_url": true,
+      "auto_on_save_intent": true,
+      "multiple_urls": "separate"
+    },
+    "runtime": {
+      "python_command": "python"
+    },
+    "fetch": {
+      "primary_tool": "WebFetch",
+      "fallback_skills": [],
+      "allow_script_fallback": false,
+      "script_path": "scripts/fetch_page.py",
+      "domain_rules": [],
+      "prompt": "Extract the title, author, publication date, and complete main content. Remove navigation, ads, comments, sidebars, footers, and recommendations. If there is no article body, provide an objective description of the page, its main functions, and intended use."
+    },
+    "classification": {
+      "article_min_paragraphs": 3,
+      "article_min_characters": 500,
+      "fallback_collection": "inbox"
+    },
+    "storage": {
+      "raw_root": "~/WebMark/raw",
+      "file_naming_pattern": "{saved_date}-{title}-{id}.md",
+      "filename_max_title_length": 80,
+      "filename_safe_replacement": "-",
+      "id_length": 10,
+      "encoding": "utf-8"
+    },
+    "front_matter": {
+      "cleanup": 0
+    },
+    "lexiang": {
+      "enabled": false,
+      "mcp_server": null,
+      "import_tool": null,
+      "team_id": null,
+      "space_id": null,
+      "root_entry_id": null,
+      "public_page_base_url": null,
+      "credential_ref": null
+    },
+    "raw_publish": {
+      "enabled": false,
+      "site_base_url": null,
+      "sync": {
+        "enabled": false,
+        "adapter": null,
+        "profile": null,
+        "target_root": null,
+        "verify": true,
+        "credential_ref": null
+      }
+    },
+    "response": {
+      "success_fields": [
+        "lexiang_url",
+        "raw_site_url"
+      ],
+      "include_summary": false,
+      "include_local_path": false,
+      "batch_format": "table",
+      "labels": {
+        "lexiang_url": "Knowledge",
+        "raw_site_url": "Raw",
+        "local_path": "Local"
+      }
+    }
+  },
+  "overrides": {}
+}
