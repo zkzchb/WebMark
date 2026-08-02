@@ -6,13 +6,13 @@
       "trigger": {
         "auto_on_bare_url": true,
         "auto_on_save_intent": true,
+        "save_intents": [
+          "YOUR_SAVE_INTENT"
+        ],
         "multiple_urls": "separate"
       },
-      "runtime": {
-        "python_command": "python"
-      },
       "fetch": {
-        "primary_tool": "WebFetch",
+        "primary_tool": "YOUR_PRIMARY_FETCH_TOOL",
         "fallback_skills": [
           "OPTIONAL_FALLBACK_SKILL"
         ],
@@ -21,7 +21,7 @@
         "domain_rules": [
           {
             "host": "example.com",
-            "primary_tool": "WebFetch"
+            "primary_tool": "YOUR_DOMAIN_FETCH_TOOL"
           }
         ],
         "prompt": "YOUR_FETCH_PROMPT"
@@ -29,7 +29,7 @@
       "classification": {
         "article_min_paragraphs": 3,
         "article_min_characters": 500,
-        "fallback_collection": "inbox"
+        "fallback_collection": "YOUR_FALLBACK_COLLECTION"
       },
       "storage": {
         "raw_root": "YOUR_RAW_DIRECTORY",
@@ -46,7 +46,9 @@
         "enabled": true,
         "mcp_server": "YOUR_MCP_SERVER_NAME",
         "import_tool": "YOUR_IMPORT_TOOL_NAME",
+        "team_name": "YOUR_TEAM_NAME",
         "team_id": "YOUR_TEAM_ID",
+        "space_name": "YOUR_SPACE_NAME",
         "space_id": "YOUR_SPACE_ID",
         "root_entry_id": "YOUR_ROOT_ENTRY_ID",
         "public_page_base_url": "https://knowledge.example.com/pages",
@@ -64,6 +66,11 @@
           "credential_ref": "YOUR_LOCAL_CREDENTIAL_REFERENCE"
         }
       },
+      "error_handling": {
+        "local_write_retries": 1,
+        "continue_on_integration_failure": true,
+        "expose_error_detail": false
+      },
       "response": {
         "success_fields": [
           "lexiang_url",
@@ -73,9 +80,9 @@
         "include_local_path": false,
         "batch_format": "table",
         "labels": {
-          "lexiang_url": "Knowledge",
-          "raw_site_url": "Raw",
-          "local_path": "Local"
+          "lexiang_url": "YOUR_KNOWLEDGE_LABEL",
+          "raw_site_url": "YOUR_RAW_LABEL",
+          "local_path": "YOUR_LOCAL_LABEL"
         }
       }
     }
