@@ -1,0 +1,7 @@
+{
+  "raw_root": "D:\\claw\\md_inbox",
+  "manifest_cache": "D:\\claw\\mdflow\\v1\\manifest.json",
+  "manifest_url": "https://config.fanqiemiao.com/mdFlow/v1/manifest.json",
+  "raw_site_base_url": null,
+  "request_timeout_seconds": 30
+}
