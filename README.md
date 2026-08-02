@@ -1,238 +1,144 @@
 # WebMark
 
-WebMark 是面向 Tencent WorkBuddy 的网络资料采集 Skill。Master 从 WorkBuddy App、微信、QQ 或飞书发送 URL 后，WebMark 优先使用 WorkBuddy 内置抓取能力取得页面内容，再完成基础清洗、初步分类、mdFlow YAML、Raw Markdown 落盘、乐享归档和 FolderMark-Raw 同步。
+WebMark 是 WorkBuddy 优先的 URL 采集 Skill：由 WorkBuddy 使用配置指定的内置工具抓取网页，再由确定性脚本生成 Raw Markdown，并按配置选择性执行知识库归档和 Raw 站点同步。
 
-成功时普通回复只返回：
+## WorkBuddy 包结构
 
-```text
-乐享：{public_page_base_url}/{entry_id}
-Raw：{raw_site_url}
-```
-
-本地文件路径仍保留在机器结果中，但不向 Master 日常回传。
-
-## WorkBuddy 导入要求
-
-根据 WorkBuddy 当前导入界面：
-
-- 可以上传文件夹或 ZIP；
-- 文件夹或 ZIP 必须包含 `SKILL.md`；
-- `SKILL.md` 必须以 YAML Front Matter 提供技能名称和描述。
-
-因此 WorkBuddy 版本只把根目录 `SKILL.md` 作为技能入口，不再依赖额外的 `skill.yml`。
-
-稳定版发布时，Release ZIP 将确保 `SKILL.md` 位于压缩包根目录。是否再从 `main` 提供其他 Agent 的在线安装版本，等 WorkBuddy 版本稳定后另行确定；当前开发分支只服务 WorkBuddy。
-
-## 项目边界
-
-- **WebMark**：数据采集 Skill。
-- **CleanMark**：深度整理 Skill，不原地修改 Raw。
-- **FolderMark**：独立开源发布程序，不依赖 mdFlow。
-- **PublishMark**：基于 FolderMark 的具体 Clean 内容站点。
-- **mdFlow**：WebMark、CleanMark、PublishMark 共同遵守的规范与配置中心。
-
-## 设计原则
-
-1. **WorkBuddy 优先抓取**：默认使用内置 `WebFetch`；微信公众号页面禁止先用 Python 抓取。
-2. **确定性操作下沉**：稳定 ID、YAML、文件写入和 URL 计算由 Python 核心完成。
-3. **同构 JSON 配置**：你可以通过远程 URL 下发配置，其他用户可以复制模板后在本地填写。
-4. **非敏感目标可下发**：Raw 站点域名、乐享团队 ID、知识库 ID、父节点 ID 可以进入 JSON。
-5. **敏感凭据只留本地**：乐享 token、服务器密码和同步密钥不得进入远程 JSON、Git 或 Markdown。
-6. **本地优先**：Raw Markdown 是权威资产，乐享是检索与问答副本。
-7. **静默运行**：成功时只回传乐享 URL 与 Raw URL。
-
-## 配置模型
-
-WebMark 有两个配置层：
-
-```text
-config/local.json
-        ↓ 本地路径、远程配置 URL、可选覆盖
-mdFlow manifest JSON
-        ↓ 分类、YAML、Raw 站点和乐享目标
-WebMark 运行时配置
-```
-
-默认远程地址：
-
-```text
-https://config.fanqiemiao.com/mdFlow/v1/manifest.json
-```
-
-日常运行只读取本地缓存。只有以下情况才联网读取：
-
-- 首次初始化；
-- 本地缓存缺失或损坏；
-- Master 明确要求升级到新地址。
-
-### 远程 JSON 模板
-
-```json
-{
-  "schema": "mdFlow-manifest-v1",
-  "version": "1.0.0",
-  "runtime": {
-    "webmark": {
-      "raw_site_base_url": "https://md.fanqiemiao.com",
-      "lexiang": {
-        "team_id": "YOUR_TEAM_ID",
-        "space_id": "YOUR_SPACE_ID",
-        "root_entry_id": "YOUR_ROOT_ENTRY_ID",
-        "public_page_base_url": "https://lexiangla.com/pages"
-      }
-    }
-  }
-}
-```
-
-你的远程 JSON 可以写入实际值。公开仓库中的 `config/example.manifest.json` 只保留占位符。
-
-### 本地手工配置
-
-不使用远程下发的用户，可以在 `config/local.json` 中填写同名覆盖字段：
-
-```json
-{
-  "raw_root": "D:\\claw\\md_inbox",
-  "manifest_cache": "D:\\claw\\mdflow\\v1\\manifest.json",
-  "manifest_url": "https://example.com/my-mdflow/manifest.json",
-  "raw_site_base_url": "https://md.example.com",
-  "lexiang": {
-    "team_id": "MY_TEAM_ID",
-    "space_id": "MY_SPACE_ID",
-    "root_entry_id": "MY_ROOT_ENTRY_ID",
-    "public_page_base_url": "https://lexiangla.com/pages"
-  }
-}
-```
-
-解析优先级：
-
-```text
-本地非空覆盖值
-→ 远程 manifest 下发值
-→ 缺失则报错
-```
-
-## WorkBuddy 前置条件
-
-### 必需
-
-- Tencent WorkBuddy 已安装并可导入本地 Skill；
-- WorkBuddy 内置 `WebFetch` 可用；
-- WorkBuddy 能写入本地 Raw 目录并运行 Python；
-- Python 3.11 或更高版本；
-- 腾讯乐享 MCP 已连接，并可调用知识条目导入工具。
-
-### 可选
-
-- `web-scraper` Skill：内置 WebFetch 不能完整抓取时使用；
-- 浏览器类 Skill：处理必须执行 JavaScript 或需要交互的网页。
-
-## 安装乐享 MCP
-
-1. 在 WorkBuddy 中配置乐享 MCP，建议服务名固定为 `lexiang`。
-2. 优先只开放知识条目相关工具。
-3. 确认能够发现并调用 `knowledge_import_content`。
-4. 乐享 token 只放在 WorkBuddy 的本地 MCP 配置中。
-
-WebMark 从解析后的 JSON 获取：
-
-- `team_id`；
-- `space_id`；
-- `root_entry_id`；
-- `public_page_base_url`。
-
-这些字段决定写入位置和最终链接，不承担身份认证。
-
-## 安装 WebMark
-
-1. 下载或解压 Skill 包。
-2. 确认包根目录存在 `SKILL.md`。
-3. 在 WorkBuddy 中选择“导入技能”，上传文件夹或 ZIP。
-4. 将 `config/example.local.json` 复制为 `config/local.json`。
-5. 安装 Python 依赖：
-
-```bash
-python -m pip install -e .
-```
-
-6. 首次初始化并检查：
-
-```bash
-python scripts/webmark.py --config config/local.json init
-python scripts/webmark.py --config config/local.json preflight
-```
-
-不要把 `config/local.json`、MCP token、服务器账号或同步密钥提交到 Git。
-
-## WorkBuddy 调用方式
-
-WorkBuddy 先抓取并整理网页，再把结构化 JSON 交给确定性脚本：
-
-```bash
-python scripts/webmark.py --config config/local.json ingest --input payload.json
-```
-
-最小 payload：
-
-```json
-{
-  "source_url": "https://example.com/article",
-  "fetched_by": "workbuddy.WebFetch",
-  "title": "页面标题",
-  "body_markdown": "正文或资源描述",
-  "content_type": "article",
-  "collection": "technology"
-}
-```
-
-脚本返回：
-
-```json
-{
-  "status": "success",
-  "local_path": "D:\\claw\\md_inbox\\technology\\...md",
-  "raw_site_url": "https://md.fanqiemiao.com/technology/xxxxxxxxxx",
-  "document_id": "xxxxxxxxxx",
-  "lexiang": {
-    "team_id": "...",
-    "space_id": "...",
-    "root_entry_id": "...",
-    "public_page_base_url": "https://lexiangla.com/pages"
-  }
-}
-```
-
-随后 WorkBuddy 使用这些目标 ID 调用乐享 MCP，并执行 FolderMark-Raw 同步。完整流程见 [SKILL.md](./SKILL.md)。
-
-## 当前目录
+WorkBuddy 可以导入文件夹或 ZIP，根目录必须包含带 YAML Front Matter 的 `SKILL.md`。实际参考包也证明，`SKILL.md` 可以读取同目录 JSON、模板和脚本。因此 WebMark 的 WorkBuddy Release 将保持下面的直接结构：
 
 ```text
 WebMark/
 ├── SKILL.md
+├── config.json
 ├── README.md
-├── config/
-│   ├── example.local.json
-│   └── example.manifest.json
+├── requirements.txt
 ├── scripts/
-│   └── webmark.py
-├── src/webmark/
-│   ├── archive.py
-│   ├── cli.py
-│   └── config.py
-├── references/
-│   ├── workbuddy.md
-│   ├── lexiang.md
-│   └── mdflow.md
-└── tests/
+├── src/
+└── references/
 ```
 
-## 当前尚待接通
+稳定后发布的 ZIP 会让 `SKILL.md` 直接位于压缩包根目录，不再依赖额外技能元数据文件。
 
-- 将实际乐享目标 ID 写入你的远程 mdFlow JSON；
-- FolderMark-Raw 服务器同步适配器及本地凭据；
-- WorkBuddy ZIP 导入实测；
-- 乐享 MCP 在 WorkBuddy 中的端到端写入实测；
-- 微信、QQ、飞书入口的统一自动触发验收；
-- 稳定后生成 WorkBuddy Release ZIP。
+## 核心原则：Skill 无个人设置
+
+`SKILL.md` 不保存以下内容：
+
+- 用户称呼和个人触发偏好；
+- 本地绝对路径、Python 路径；
+- 配置中心 URL；
+- 抓取工具和回退 Skill 名称；
+- 分类阈值与默认目录；
+- Raw 站点域名和服务器目录；
+- MCP 服务名、工具名、团队 ID、知识库 ID 和父节点 ID；
+- 回传字段、标签、摘要和本地路径偏好。
+
+这些内容全部进入 JSON。代码也不提供任何特定用户的默认域名、路径或 ID。
+
+认证信息是例外：token、密码、私钥、AppSecret 等不应进入远程或本地 WebMark JSON。JSON 只保存 `credential_ref`，真正凭据由 WorkBuddy MCP、SSH profile 或本地凭据系统管理。程序会拒绝常见明文 secret 字段。
+
+## 两种配置方式
+
+### 远程下发
+
+适合个人长期使用。根目录 `config.json` 只保存配置来源、缓存位置和本机启动命令：
+
+```json
+{
+  "schema": "webmark-bootstrap-v1",
+  "bootstrap": {
+    "python_command": "python",
+    "pip_command": "python -m pip"
+  },
+  "source": {
+    "mode": "remote",
+    "url": "https://config.example.com/mdflow/v1/manifest.json",
+    "cache_path": "~/.webmark/config-cache.json",
+    "selector": "runtime.webmark",
+    "request_timeout_seconds": 30
+  },
+  "settings": {},
+  "overrides": {}
+}
+```
+
+远程文档中被 `selector` 选中的对象包含全部 WebMark 个性化设置。日常运行只读取缓存；首次初始化、缓存缺失或损坏、显式升级时才访问远程 URL。
+
+### 本地填写
+
+适合公开用户。保持 `source.mode` 为 `inline`，直接修改 `config.json` 中的 `settings`。仓库提供一份不含个人数据的完整模板。
+
+本地 `overrides` 会深度覆盖远程设置，适合临时更换目录或关闭某个集成。
+
+## 配置范围
+
+完整 JSON 可配置：
+
+- `trigger`：自动触发和多 URL 行为；
+- `runtime`：Agent 运行参数；
+- `fetch`：主抓取工具、域名规则、回退 Skill、Prompt 和脚本回退；
+- `classification`：文章判定阈值和兜底分类；
+- `storage`：Raw 根目录、文件名、编码和 ID 长度；
+- `front_matter`：Raw YAML 初始状态；
+- `lexiang`：是否启用、MCP 服务和工具名称、目标 ID、公开链接基地址；
+- `raw_publish`：站点基地址、同步 adapter、profile、目标目录和验证；
+- `response`：成功回传字段、标签、摘要、本地路径和批量格式。
+
+远程完整模板见 `mdflow.webmark.example.json`，远程启动模板见 `config.remote.example.json`。
+
+## 安装
+
+1. 下载 Release ZIP 或文件夹。
+2. 确认 `SKILL.md` 位于包根目录。
+3. 在 WorkBuddy 的“导入技能”界面上传。
+4. 编辑根目录 `config.json`，选择 remote 或 inline 模式。
+5. 安装依赖：
+
+```text
+{pip_command} install -r "<skill_dir>/requirements.txt"
+```
+
+6. 初始化并检查：
+
+```text
+{python_command} "<skill_dir>/scripts/webmark.py" --config "<skill_dir>/config.json" init
+{python_command} "<skill_dir>/scripts/webmark.py" --config "<skill_dir>/config.json" preflight
+```
+
+其中 `{python_command}` 和 `{pip_command}` 取自 `config.json` 的 `bootstrap`。
+
+## 命令
+
+查看 Agent 应使用的最终配置：
+
+```text
+webmark --config config.json config
+```
+
+初始化或显式刷新远程缓存：
+
+```text
+webmark --config config.json init
+webmark --config config.json init --upgrade-url https://config.example.com/new.json
+```
+
+检查配置和 Raw 目录：
+
+```text
+webmark --config config.json preflight
+```
+
+归档 WorkBuddy 已抓取的结构化内容：
+
+```text
+webmark --config config.json ingest --input payload.json
+```
+
+## 分支与发布
+
+当前先稳定 WorkBuddy 版本。稳定后：
+
+- 为 WorkBuddy 建立稳定分支；
+- 通过 GitHub Releases 提供根目录含 `SKILL.md` 的 ZIP；
+- 是否让 `main` 面向其他 Agent 在线安装，待其他平台规范确定后再决定。
+
+现在不为了未知平台兼容性削弱 WorkBuddy 版。
